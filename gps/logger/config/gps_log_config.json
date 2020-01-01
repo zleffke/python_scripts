@@ -1,0 +1,14 @@
+{
+    "title":"Simple GPSd Logger",
+    "version":"0.0.1",
+    "log":{
+        "path":"./log",
+        "verbose":true,
+        "level":"DEBUG"
+    },
+    "gpsd":{
+        "ip":"0.0.0.0",
+        "port":2947
+    }
+
+}
