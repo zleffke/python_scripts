@@ -1,0 +1,3 @@
+*.pyc
+vcc_sched/network/input/
+vcc_sched/network/output/
