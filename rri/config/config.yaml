@@ -1,0 +1,6 @@
+main:
+  name: "rri_to_sigmf"
+  version: "0.0.1"
+  base_path: 'cwd'
+  rri_path: '/home/zleffke/captures/rri'
+  rri_file: 'RRI_20150410_235607_235959_lv1_12.0.0.h5'

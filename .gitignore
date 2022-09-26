@@ -1,3 +1,4 @@
 *.pyc
 **/vcc_sched/**/input/
 **/vcc_sched/**/output/
+**/rri/*data/
