@@ -57,7 +57,7 @@ Future versions may revisit this and provide sample index, frequency, and timest
 
 `rri` does not extend [Annotations](https://github.com/gnuradio/SigMF/blob/master/sigmf-spec.md#annotations-array)
 
-Future versions of this extensions may include satellite ephemeris information.  The ``
+Future versions of this extensions may include satellite ephemeris information.  
 
 ## 4 Collection
 
