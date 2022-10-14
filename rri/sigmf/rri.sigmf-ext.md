@@ -20,14 +20,14 @@ The following names are specified in the `rri` namespace and should be used in t
 |----|--------|----|----|-----------|--------|
 |`experiment`    |true |string|N/A|Type of RRI Experiment|Not in HDF5 data, filename of downloaded data|
 |`channel`       |true |string|N/A|Which RRI Channel, A or B|HDF5 contains metadata for each channel|
-|`frequency`     |true |double|Hz |Center Frequency of Channel| `RRI Data`:Channel A(orB) frequencies (Hz)|
-|`antenna_1_gain`|false|string|N/A|Gain of Channel 1 Radio Data|`RRI Settings`:`Antenna 1 Gain`|
-|`antenna_2_gain`|false|string|N/A|Gain of Channel 2 Radio Data|`RRI Settings`:`Antenna 2 Gain`|
-|`antenna_3_gain`|false|string|N/A|Gain of Channel 3 Radio Data|`RRI Settings`:`Antenna 3 Gain`|
-|`antenna_4_gain`|false|string|N/A|Gain of Channel 4 Radio Data|`RRI Settings`:`Antenna 4 Gain`|
-|`antenna_config`|false|string|N/A|Antenna Configuration, Monopole or Dipole|`RRI Settings`:`Antenna
-|`format``       |false|string|N/A|Data Format|`RRI Settings`:`Data Format`|
-|`bandwidth`     |false|double|Hz |Bandwidth of recording for A (or B)|`RRI Settings`:`Bandwidth A (kHz)`|
+|`frequency`     |true |double|Hz |Center Frequency of Channel| `RRI Data: Channel A(orB) frequencies (Hz)``|
+|`antenna_1_gain`|false|string|N/A|Gain of Channel 1 Radio Data|`RRI Settings:Antenna 1 Gain`|
+|`antenna_2_gain`|false|string|N/A|Gain of Channel 2 Radio Data|`RRI Settings:Antenna 2 Gain`|
+|`antenna_3_gain`|false|string|N/A|Gain of Channel 3 Radio Data|`RRI Settings:Antenna 3 Gain`|
+|`antenna_4_gain`|false|string|N/A|Gain of Channel 4 Radio Data|`RRI Settings:Antenna 4 Gain`|
+|`antenna_config`|false|string|N/A|Antenna Configuration, Monopole or Dipole|`RRI Settings:Antenna
+|`format``       |false|string|N/A|Data Format|`RRI Settings:Data Format`|
+|`bandwidth`     |false|double|Hz |Bandwidth of recording for A (or B)|`RRI Settings:Bandwidth A (kHz)`|
 
 ### `antenna_config` and `format`
 The RRI can be configured to either be in a 4 monopole configuration or a dipole configuration. This is enabled by a physical relay switch on the instrument, and the `antenna_config` field essentially indicates the position of the relays.
