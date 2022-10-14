@@ -48,8 +48,8 @@ For the initial development of the tool, only data in `dipole` mode is being con
 ## 2 Captures
 
 `rri` does not extend [Captures](https://github.com/gnuradio/SigMF/blob/master/sigmf-spec.md#captures-array).
-The `core::samp_start`, `core::frequency`, and `core:datetime` fields are populated from the RRI data.
-Note that the `core::datetime` field is populated from the first timestamp in the HDF5 `CASSIOPE Ephemeris::Ephemeris MET (seconds since May 24, 1968)` data, but converted from Mission Elapsed Time (MET) to UTC.
+The `core:samp_start`, `core:frequency`, and `core:datetime` fields are populated from the RRI data.
+Note that the `core:datetime` field is populated from the first timestamp in the HDF5 `CASSIOPE Ephemeris:Ephemeris MET (seconds since May 24, 1968)` data, but converted from Mission Elapsed Time (MET) to UTC.
 
 Future versions may revisit this and provide sample index, frequency, and timestamp in the `captures` field for each timestamp in the CASSIOPE metadata, 1 entry per second.  For now, this information can be inferred from sample rate information and timestamp for the first sample in the stream.  Future versions may also include satellite position, velocity, and attitude information from the `CASSIOPE Ephemeris` HDF5 object (though this might be more appropriate as an `annotations` object).
 
