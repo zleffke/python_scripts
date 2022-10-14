@@ -32,7 +32,7 @@ import hdf5_utils as utils
 def import_configs_yaml(args):
     ''' setup configuration data '''
     fp_cfg = '/'.join([args.cfg_path,args.cfg_file])
-    print (fp_cfg)
+    #print (fp_cfg)
     if not os.path.isfile(fp_cfg) == True:
         print('ERROR: Invalid Configuration File: {:s}'.format(fp_cfg))
         sys.exit()
@@ -73,48 +73,69 @@ if __name__ == '__main__':
     os.system('reset')
     #--Import and Parse Configuration File
     cfg = import_configs_yaml(args)
-    print(cfg)
-    rri=utils.import_h5(cfg)
-    print(list(rri.keys()))
-    print(rri.attrs.keys())
+    #print(cfg)
+    #rri=utils.import_h5(cfg)
+    #print(list(rri.keys()))
+    #print(rri.keys())
 
-    conv = utils.HDF5_Converter()
-    metadata = conv.get_metadata(rri)
-    #metadata = utils.clean_attributes(metadata)
-    #print(metadata)
-    for key in metadata.keys():
-        print(metadata[key])
+    #conv = utils.HDF5_SigMF_Converter(rri)
 
+    conv = utils.HDF5_SigMF_Converter(cfg)
+    metadata = conv.get_metadata()
+    #print(json.dumps(metadata, indent=4))
 
+    # conv._gen_sigmf_filename(verbose=True)
+    # conv._gen_sigmf_meta(verbose=True)
+    conv.get_radio_iq(export=True)
+    conv.get_radio_meta()
+
+    sys.exit()
+
+    conv._radio_meta(cfg)
+
+    #
 
     sys.exit()
 
 
+    #
 
+    # print(metadata['CASSIOPE Ephemeris'].keys())
+    # for key in metadata['CASSIOPE Ephemeris'].keys():
+    #     obj = metadata['CASSIOPE Ephemeris'][key]
+    #     print(key, len(obj), type(obj))
+    #     if key == "GEI Position (km)":
+    #         print(len(obj[0]), type(obj[0]))
+    #         print(obj[1], type(obj[0]))
+    #
+    # df_eph = pd.DataFrame.from_dict(metadata['CASSIOPE Ephemeris'])
+    # df_rri = pd.DataFrame.from_dict(metadata['RRI Settings'])
+    # print(df_eph)
+    # sys.exit()
 
-    meta = dict()
-    for item_name, obj in rri.items():
-        print(item_name)
-        print(obj)
-        if isinstance(obj, h5py.Group):
-            temp = clean_attributes(get_attributes(obj))
-            sub_attrs = get_attrs_from_groups(obj)
-            temp.update(sub_attrs)
-            metadata_tree[item_name] = temp
-
-    sys.exit()
-
-
-
-
-
-
-    for k in rri.keys():
-        print(k)
-        print(rri[k].keys())
-
-    print(np.array(rri['RRI Data']['RRI Packet Numbers']))
-
-    print(np.array(rri['RRI Data']['Radio Data Monopole 1 (mV)']))
-
-    sys.exit()
+    # meta = dict()
+    # for item_name, obj in rri.items():
+    #     print(item_name)
+    #     print(obj)
+    #     if isinstance(obj, h5py.Group):
+    #         temp = clean_attributes(get_attributes(obj))
+    #         sub_attrs = get_attrs_from_groups(obj)
+    #         temp.update(sub_attrs)
+    #         metadata_tree[item_name] = temp
+    #
+    # sys.exit()
+    #
+    #
+    #
+    #
+    #
+    #
+    # for k in rri.keys():
+    #     print(k)
+    #     print(rri[k].keys())
+    #
+    # print(np.array(rri['RRI Data']['RRI Packet Numbers']))
+    #
+    # print(np.array(rri['RRI Data']['Radio Data Monopole 1 (mV)']))
+    #
+    # sys.exit()

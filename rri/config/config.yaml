@@ -2,5 +2,25 @@ main:
   name: "rri_to_sigmf"
   version: "0.0.1"
   base_path: 'cwd'
-  rri_path: '/home/zleffke/captures/rri'
+  rri_path: '/home/zleffke/captures/rri/rothr'
   rri_file: 'RRI_20150410_235607_235959_lv1_12.0.0.h5'
+sigmf: #Sigmf Keys
+  global: #global key
+    core: #core key
+      samp_rate: 62500.33933 #[hz]
+      hw: "ePOP,CASSIOPE,RRI"
+      license: "MIT"
+      author: "Zach Leffke, KJ4QLP"
+      description: "Radio Research Instrument IQ, https://epop.phys.ucalgary.ca/data/"
+      version: "0.0.2"
+      datatype: "cf32_le"
+      extensions:
+        - name: "rri"
+          version: "1.0.0"
+          optional: True
+  captures:
+    core:
+      sample_start: 0
+      frequency: 0.0
+      datetime: ""
+  annotations: ""
