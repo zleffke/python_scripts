@@ -25,7 +25,7 @@ The following names are specified in the `rri` namespace and should be used in t
 |`antenna_2_gain`|false|string|N/A|Gain of Channel 2 Radio Data|`RRI Settings:Antenna 2 Gain`|
 |`antenna_3_gain`|false|string|N/A|Gain of Channel 3 Radio Data|`RRI Settings:Antenna 3 Gain`|
 |`antenna_4_gain`|false|string|N/A|Gain of Channel 4 Radio Data|`RRI Settings:Antenna 4 Gain`|
-|`antenna_config`|false|string|N/A|Antenna Configuration, Monopole or Dipole|`RRI Settings:Antenna'|
+|`antenna_config`|false|string|N/A|Antenna Configuration, Monopole or Dipole|`RRI Settings:Antenna`|
 |`format`        |false|string|N/A|Data Format|`RRI Settings:Data Format`|
 |`bandwidth`     |false|double|Hz |Bandwidth of recording for A (or B)|`RRI Settings:Bandwidth A (kHz)`|
 
