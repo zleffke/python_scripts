@@ -18,7 +18,7 @@ The following names are specified in the `rri` namespace and should be used in t
 
 |name|required|type|unit|description|RRI HDF5|
 |----|--------|----|----|-----------|--------|
-|`experiment`    |true |string|N/A|Type of RRI Experiment|Not in HDF5 data, filename of downloaded data|
+|`experiment`    |true |string|N/A|Type of RRI Experiment|Not in HDF5 data|
 |`channel`       |true |string|N/A|Which RRI Channel, A or B|HDF5 contains metadata for each channel|
 |`frequency`     |true |double|Hz |Center Frequency of Channel| `RRI Data: Channel A(orB) frequencies (Hz)`|
 |`antenna_1_gain`|false|string|N/A|Gain of Channel 1 Radio Data|`RRI Settings:Antenna 1 Gain`|
@@ -28,6 +28,10 @@ The following names are specified in the `rri` namespace and should be used in t
 |`antenna_config`|false|string|N/A|Antenna Configuration, Monopole or Dipole|`RRI Settings:Antenna
 |`format``       |false|string|N/A|Data Format|`RRI Settings:Data Format`|
 |`bandwidth`     |false|double|Hz |Bandwidth of recording for A (or B)|`RRI Settings:Bandwidth A (kHz)`|
+
+### `experiment`
+RRI Data is typically planned with some type of experiment in mind. The author is currently examining experiments involving transionospheric propagation, so the `experiment` is usually indicative of the ground based transmitter that is being recorded by the orbiting RRI, i.e. `ROTHR`, `WWV`, or `SUPERDARN`.  This information is not contained in the Level 1 HDF5 metadata nor is it contained in the summary text file found alongside the data in the ePOP data warehouse.  Yet somehow this information does exist in the data warehouse as it is one of the possible filter keys for searching through the posted datasets.  
+A decision must be made for how to populate this field in this repo's RRI data converter python code. One option considered is to extract the information from the filepath information for where the data is downloaded.  However, this implicitly assumes that users are using the same filepath and filenaming convention as the author, which is not necessarily always going to be true.  For now, explicitly declaring the `experiment` field in the base config YAML file will be used in the SigMF section.  If a user updates the input filepath and filename, they should also update the experiment description field in the config file.  This information may also be included in the SigMF filename to make identification of the type of signal recorded quick to ID when searching through the SigMF files.
 
 ### `antenna_config` and `format`
 The RRI can be configured to either be in a 4 monopole configuration or a dipole configuration. This is enabled by a physical relay switch on the instrument, and the `antenna_config` field essentially indicates the position of the relays.
