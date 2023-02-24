@@ -48,29 +48,33 @@ class HDF5_SigMF_Converter(object):
         self.metadata = None
         self.radio_data = None
 
+        self.verbose     = self.cfg['main']['verbose']
+        self.export_iq   = self.cfg['main']['export']['iq']
+        self.export_meta = self.cfg['main']['export']['meta']
+
         try:
             self._import_h5()
         except Exception as e:
             print(e)
             return 0
 
-        self._gen_sigmf_filename(verbose = True)
+        self._gen_sigmf_filename()
 
         self.RRI_SAMP_RATE_REAL    = 1.0 / 62500.33933
         self.RRI_SAMP_RATE_COMPLEX = self.RRI_SAMP_RATE_REAL / 2
         self.rd = []
 
     def _import_h5(self):
-        print("Importing RRI Data...")
+        if self.verbose: print("Importing RRI Data...")
         rri_fp = '/'.join([self.cfg['main']['rri_path'],
                            self.cfg['main']['rri_file']])
-        print("Import Filepath: {:s}".format(rri_fp))
+        if self.verbose: print("Import Filepath: {:s}".format(rri_fp))
         if not os.path.exists(rri_fp) == True:
-            print('  ERROR: RRI file or path does not exist: {:s}'.format(rri_fp))
+            if self.verbose: print('  ERROR: RRI file or path does not exist: {:s}'.format(rri_fp))
             sys.exit()
         h5 = h5py.File(rri_fp, 'r')
         self.h5_data = h5
-        print("RRI Data Import Complete")
+        if self.verbose: print("RRI Data Import Complete")
 
     def _get_attr(self, h5_object, attr_name):
         """
@@ -172,7 +176,7 @@ class HDF5_SigMF_Converter(object):
             #     print("deleting Radio Data key...")
             if "RRI Data" in key:
                 attrs_to_delete.append(key)
-                print("deleting RRI Data metadata...")
+                if self.verbose: print("deleting RRI Data metadata...")
 
         for key in attrs_to_delete:
             del metadata[key]
@@ -223,65 +227,98 @@ class HDF5_SigMF_Converter(object):
         self.metadata = metadata
 
     def get_metadata(self, h5_data=None):
-        print('Generating Metadata From HDF5 Data...')
+        if self.verbose: print('Generating Metadata From HDF5 Data...')
         if h5_data != None:
-            print("updating converter HDF5 Data")
+            if self.verbose: print("updating converter HDF5 Data")
             self.h5_data = h5_data
         self._update_metadata(self.h5_data)
         self._generate_utc_time()
         return self.metadata
 
-    def get_radio_iq(self, export =False):
-        print("Extracting and Converting IQ...")
+    def get_radio_iq(self):
+        if self.verbose: print("Extracting and Converting IQ...")
         self.rd = self.h5_data["RRI Data"]
-        if self.metadata['RRI Settings']['Data Format'] == "I1Q1I3Q3":
-            i1 = np.array(self.rd['Radio Data Monopole 1 (mV)'], dtype=np.single)
-            q1 = np.array(self.rd['Radio Data Monopole 2 (mV)'], dtype=np.single)
-            i2 = np.array(self.rd['Radio Data Monopole 3 (mV)'], dtype=np.single)
-            q2 = np.array(self.rd['Radio Data Monopole 4 (mV)'], dtype=np.single)
+        #extract samples from HDF5 fields
+        self.rd1 = np.array(self.rd['Radio Data Monopole 1 (mV)'], dtype=np.single)
+        self.rd2 = np.array(self.rd['Radio Data Monopole 2 (mV)'], dtype=np.single)
+        self.rd3 = np.array(self.rd['Radio Data Monopole 3 (mV)'], dtype=np.single)
+        self.rd4 = np.array(self.rd['Radio Data Monopole 4 (mV)'], dtype=np.single)
+        #convert NaN to 0
+        self.rd1[np.isnan(self.rd1)] = 0
+        self.rd2[np.isnan(self.rd2)] = 0
+        self.rd3[np.isnan(self.rd3)] = 0
+        self.rd4[np.isnan(self.rd4)] = 0
+        #convert 4x29 samps to single continuous dataset
+        self.rd1 = np.hstack(self.rd1)
+        self.rd2 = np.hstack(self.rd2)
+        self.rd3 = np.hstack(self.rd3)
+        self.rd4 = np.hstack(self.rd4)
 
-            i1[np.isnan(i1)] = 0
-            q1[np.isnan(q1)] = 0
-            i2[np.isnan(i2)] = 0
-            q2[np.isnan(q2)] = 0
-            #iq2[np.isnan(iq2)] = 0
-            #print ("IQ1 Length: {:d}".format(len(iq1)))
-            self.i1_flat = np.hstack(i1)
-            self.q1_flat = np.hstack(q1)
-            self.i2_flat = np.hstack(i2)
-            self.q2_flat = np.hstack(q2)
-            #iq2_flat = np.hstack(iq2)
-            #iq1_cp = np.apply_along_axis(lambda args: [np.complex(*args), 3, iq1_flat])
-            self.iq1 = np.vectorize(complex)(self.i1_flat,self.q1_flat).astype(dtype=np.csingle)
-            self.iq2 = np.vectorize(complex)(self.i2_flat,self.q2_flat).astype(dtype=np.csingle)
+        print(self.metadata['RRI Settings'])
 
-            if export:
+        if self.metadata['RRI Settings']['Antenna Configuration'] == 'Dipole':
+            if self.verbose: print("Extracting Dipole IQ Data...")
+            #Antenna set to dipole mode, expect I1Q1I3Q3 for Data Format
+            #This explixitly assumes there are two output files....future versions
+            #may need to account for possibility of up to 4 output files of with different formats.
+            if self.metadata['RRI Settings']['Data Format'] == "I1Q1I3Q3":
+                #Convert to complex IQ datadtype
+                self.iq1 = np.vectorize(complex)(self.rd1,self.rd2).astype(dtype=np.csingle)
+                self.iq2 = np.vectorize(complex)(self.rd3,self.rd4).astype(dtype=np.csingle)
+            if self.metadata['RRI Settings']['Data Format'] == "I1I2I3I4":
+                #Convert to complex IQ datatype
+                # This one seems to be right
+                self.iq1 = np.vectorize(complex)(self.rd1,self.rd2).astype(dtype=np.csingle)
+                self.iq2 = np.vectorize(complex)(self.rd3,self.rd4).astype(dtype=np.csingle)
+
+                #This one seems to be slightly wrong:
+                #keeping the code commented out as reminder to Future Zach
+                # self.iq1 = np.vectorize(complex)(self.rd1,0).astype(dtype=np.csingle)
+                # self.iq2 = np.vectorize(complex)(self.rd3,0).astype(dtype=np.csingle)
+
+
+        elif self.metadata['RRI Settings']['Antenna Configuration'] == 'Monopole':
+            if self.verbose: print("Extracting Monopole IQ Data...")
+            if self.cfg['main']['mono_to_di']:
+                if self.verbose: print("Converting Monopole Data to Dipole Data")
+                #Monopoles 1 & 2 -> Dipole 1 -> Channel A
+                #Monopoles 3 & 4 -> Dipole 2 -> Channel B
+                dpA = self.rd1-self.rd2
+                dpB = self.rd3-self.rd4
+
+                self.iq1 = np.vectorize(complex)(dpA,0).astype(dtype=np.csingle)
+                self.iq2 = np.vectorize(complex)(dpB,0).astype(dtype=np.csingle)
+        else:
+            print("WARNING: Unknown Antenna Configuration!")
+            print(self.metadata['RRI Settings'])
+            sys.exit()
+
+        if self.export_iq:
+            if self.verbose:
                 print("Writing IQ to file...")
-
                 print("Writing Channel A File: {:s}".format(self.sigmf_fps['A']['data']))
-                with open(self.sigmf_fps['A']['data'], 'w') as f:
-                    self.iq1.tofile(f, sep="")
-                    f.close()
+            with open(self.sigmf_fps['A']['data'], 'w') as f:
+                self.iq1.tofile(f, sep="")
+                f.close()
+            if self.verbose:
                 print("Writing Channel B File: {:s}".format(self.sigmf_fps['B']['data']))
-                with open(self.sigmf_fps['B']['data'], 'w') as f:
-                    self.iq2.tofile(f, sep="")
-                    f.close()
+            with open(self.sigmf_fps['B']['data'], 'w') as f:
+                self.iq2.tofile(f, sep="")
+                f.close()
+        else:
+            if self.verbose: print("IQ Data Export set to FALSE...")
 
     def get_radio_meta(self):
-        print("---- CASSIOPE Metadata ---------")
+        if self.verbose:
+            print()
+            print("----------Processing Metadata----------------------")
+            print("---- CASSIOPE Metadata ---------")
         utc_min = self.metadata['CASSIOPE Ephemeris']['Ephemeris UTC [sec]'][0]
         utc_max = self.metadata['CASSIOPE Ephemeris']['Ephemeris UTC [sec]'][-1]
         dt_min = datetime.datetime.fromtimestamp(utc_min, tz=pytz.UTC)
         dt_max = datetime.datetime.fromtimestamp(utc_max, tz=pytz.UTC)
         utc_dur = utc_max - utc_min
-        print("     Start [UTC]:", dt_min.isoformat().replace("+00:00","Z"))
-        print("      Stop [UTC]:", dt_max.isoformat().replace("+00:00","Z"))
-        print("     Start [sec]:", utc_min)
-        print("      Stop [sec]:", utc_max)
-        print("   utc_dur [sec]:", utc_dur)
 
-        print("---- RRI Metadata PACKET---------")
-        print("keys:", list(self.rd.keys()))
         rri_pkt_idx_min = min(self.rd['RRI Packet Numbers'])
         rri_pkt_idx_max = max(self.rd['RRI Packet Numbers'])
         print("RRI Packet Number:", rri_pkt_idx_min, rri_pkt_idx_max)
@@ -291,44 +328,119 @@ class HDF5_SigMF_Converter(object):
         duration = self.RRI_SAMP_RATE_REAL * sample_count
         print("  duration:", duration)
         print("---- RRI Metadata SAMPLES---------")
-        samp_count = len(self.iq1)
+        samp_count = len(self.rd1)
         print("samp count:", samp_count)
         samp_dur = self.RRI_SAMP_RATE_REAL * samp_count
         print("  samp_dur:", samp_dur)
 
-        #Generate Sigmf File Names
-        self._gen_sigmf_metadata(verbose=True)
+        if self.verbose:
+            print("     Start [UTC]:", dt_min.isoformat().replace("+00:00","Z"))
+            print("      Stop [UTC]:", dt_max.isoformat().replace("+00:00","Z"))
+            print("     Start [sec]:", utc_min)
+            print("      Stop [sec]:", utc_max)
+            print("   utc_dur [sec]:", utc_dur)
 
-    def _gen_sigmf_metadata(self, verbose = False):
+            print("---- RRI Metadata PACKET---------")
+            print("keys:", list(self.rd.keys()))
+            print("RRI Packet Number:", rri_pkt_idx_min, rri_pkt_idx_max)
+            print("samp count:", sample_count)
+            print("  duration:", duration)
+            print("---- RRI Metadata SAMPLES---------")
+            print("samp count:", samp_count)
+            print("  samp_dur:", samp_dur)
+        #Generate Sigmf File Names
+        self._gen_sigmf_metadata()
+
+    def _gen_sigmf_metadata(self):
         #Generate initial dict structure
         self.dp1_sigmf_meta = copy.deepcopy(self.cfg['sigmf'])
         self.dp2_sigmf_meta = copy.deepcopy(self.cfg['sigmf'])
 
+        temp = copy.deepcopy(self.cfg['sigmf']['captures'])
+        self.dp1_sigmf_meta['captures'] = []
+        self.dp1_sigmf_meta['captures'].append(temp)
+        self.dp2_sigmf_meta['captures'] = []
+        self.dp2_sigmf_meta['captures'].append(temp)
+
         utc_min = self.metadata['CASSIOPE Ephemeris']['Ephemeris UTC [sec]'][0]
         dt_min = datetime.datetime.fromtimestamp(utc_min, tz=pytz.UTC)
 
-        print(self.metadata['RRI Settings'])
+        if self.verbose:
+            print("---- RRI Settings---------")
+            print(self.metadata['RRI Settings'])
 
-        #----DIPOLE 1-----------------------------
-        self.dp1_sigmf_meta['global']['core']['hw'] = self.dp1_sigmf_meta['global']['core']['hw'] + ",CHAN-A"
-        self.dp1_sigmf_meta['captures']['core']['datetime'] = dt_min.isoformat().replace("+00:00","Z")
-        self.dp1_sigmf_meta['captures']['core']['frequency'] = self.metadata['RRI Settings']['Start Frequency A (Hz)']
-        if verbose:
+        if self.metadata['RRI Settings']['Antenna Configuration'] == 'Dipole':
+            #Antenna set to dipole mode, expect I1Q1I3Q3 for Data Format
+            #This explixitly assumes there are two output files....future versions
+            #may need to account for possibility of up to 4 output files of with different formats.
+            if self.metadata['RRI Settings']['Data Format'] == "I1Q1I3Q3":
+
+                #----DIPOLE 1-----------------------------
+                self.dp1_sigmf_meta['global']['rri:antenna_config'] = self.metadata['RRI Settings']['Antenna Configuration']
+                self.dp1_sigmf_meta['global']['rri:format'] = self.metadata['RRI Settings']['Data Format']
+                self.dp1_sigmf_meta['global']['rri:channel'] = "A"
+                self.dp1_sigmf_meta['global']['rri:antenna_1_gain'] = self.metadata['RRI Settings']['Antenna 1 Gain']
+                self.dp1_sigmf_meta['global']['rri:antenna_2_gain'] = self.metadata['RRI Settings']['Antenna 2 Gain']
+                self.dp1_sigmf_meta['captures'][0]['core:datetime'] = dt_min.isoformat().replace("+00:00","Z")
+                self.dp1_sigmf_meta['captures'][0]['core:frequency'] = self.metadata['RRI Settings']['Start Frequency A (Hz)']
+                self.dp1_sigmf_meta['global']['rri:bandwidth'] = self.metadata['RRI Settings']['Bandwidth A (kHz)'] * 1e3 #conv to Hz
+
+                #----DIPOLE 2-----------------------------
+                self.dp2_sigmf_meta['global']['rri:antenna_config'] = self.metadata['RRI Settings']['Antenna Configuration']
+                self.dp2_sigmf_meta['global']['rri:format'] = self.metadata['RRI Settings']['Data Format']
+                self.dp2_sigmf_meta['global']['rri:channel'] = "B"
+                self.dp2_sigmf_meta['global']['rri:antenna_3_gain'] = self.metadata['RRI Settings']['Antenna 3 Gain']
+                self.dp2_sigmf_meta['global']['rri:antenna_4_gain'] = self.metadata['RRI Settings']['Antenna 4 Gain']
+                self.dp2_sigmf_meta['captures'][0]['core:datetime'] = dt_min.isoformat().replace("+00:00","Z")
+                self.dp2_sigmf_meta['captures'][0]['core:frequency'] = self.metadata['RRI Settings']['Start Frequency B (Hz)']
+                self.dp2_sigmf_meta['global']['rri:bandwidth'] = self.metadata['RRI Settings']['Bandwidth B (kHz)'] * 1e3 #conv to Hz
+
+        if self.metadata['RRI Settings']['Antenna Configuration'] == 'Monopole':
+            if self.metadata['RRI Settings']['Data Format'] == "I1I2I3I4":
+                #----DIPOLE 1-----------------------------
+                self.dp1_sigmf_meta['global']['rri:antenna_config'] = self.metadata['RRI Settings']['Antenna Configuration']
+                self.dp1_sigmf_meta['global']['rri:format'] = self.metadata['RRI Settings']['Data Format']
+                self.dp1_sigmf_meta['global']['rri:channel'] = "A"
+                self.dp1_sigmf_meta['global']['rri:antenna_1_gain'] = self.metadata['RRI Settings']['Antenna 1 Gain']
+                self.dp1_sigmf_meta['global']['rri:antenna_2_gain'] = self.metadata['RRI Settings']['Antenna 2 Gain']
+                self.dp1_sigmf_meta['captures'][0]['core:datetime'] = dt_min.isoformat().replace("+00:00","Z")
+                self.dp1_sigmf_meta['captures'][0]['core:frequency'] = self.metadata['RRI Settings']['Start Frequency A (Hz)']
+                self.dp1_sigmf_meta['global']['rri:bandwidth'] = self.metadata['RRI Settings']['Bandwidth A (kHz)'] * 1e3 #conv to Hz
+
+                #----DIPOLE 2-----------------------------
+                self.dp2_sigmf_meta['global']['rri:antenna_config'] = self.metadata['RRI Settings']['Antenna Configuration']
+                self.dp2_sigmf_meta['global']['rri:format'] = self.metadata['RRI Settings']['Data Format']
+                self.dp2_sigmf_meta['global']['rri:channel'] = "B"
+                self.dp2_sigmf_meta['global']['rri:antenna_3_gain'] = self.metadata['RRI Settings']['Antenna 3 Gain']
+                self.dp2_sigmf_meta['global']['rri:antenna_4_gain'] = self.metadata['RRI Settings']['Antenna 4 Gain']
+                self.dp2_sigmf_meta['captures'][0]['core:datetime'] = dt_min.isoformat().replace("+00:00","Z")
+                self.dp2_sigmf_meta['captures'][0]['core:frequency'] = self.metadata['RRI Settings']['Start Frequency B (Hz)']
+                self.dp2_sigmf_meta['global']['rri:bandwidth'] = self.metadata['RRI Settings']['Bandwidth B (kHz)'] * 1e3 #conv to Hz
+
+
+
+        if self.verbose:
             print("--- DIPOLE 1 METADATA ----")
             print(json.dumps(self.dp1_sigmf_meta, indent=4))
             print("--------------------------")
-
-        #----DIPOLE 2-----------------------------
-        self.dp2_sigmf_meta['global']['core']['hw'] = self.dp2_sigmf_meta['global']['core']['hw'] + ",CHAN-B"
-        self.dp2_sigmf_meta['captures']['core']['datetime'] = dt_min.isoformat().replace("+00:00","Z")
-        self.dp2_sigmf_meta['captures']['core']['frequency'] = self.metadata['RRI Settings']['Start Frequency B (Hz)']
-        if verbose:
             print("--- DIPOLE 2 METADATA ----")
             print(json.dumps(self.dp2_sigmf_meta, indent=4))
             print("--------------------------")
 
+        if self.export_meta:
+            if self.verbose:
+                print("Writing Metadata to file...")
+                print("Writing Channel A File: {:s}".format(self.sigmf_fps['A']['meta']))
+            with open(self.sigmf_fps['A']['meta'], 'w') as f:
+                f.write(json.dumps(self.dp1_sigmf_meta, indent=4))
+                f.close()
+            if self.verbose:
+                print("Writing Channel B File: {:s}".format(self.sigmf_fps['B']['meta']))
+            with open(self.sigmf_fps['B']['meta'], 'w') as f:
+                f.write(json.dumps(self.dp2_sigmf_meta, indent=4))
+                f.close()
 
-    def _gen_sigmf_filename(self, verbose = False):
+    def _gen_sigmf_filename(self):
 
         self.sigmf_fps = {}
         self.sigmf_fps['A'] = {}
@@ -350,7 +462,7 @@ class HDF5_SigMF_Converter(object):
         self.sigmf_fps['A']['data'] = '/'.join([self.cfg['main']['rri_path'],fn_dp1_data])
         self.sigmf_fps['B']['data'] = '/'.join([self.cfg['main']['rri_path'],fn_dp2_data])
 
-        if verbose:
+        if self.verbose:
             print("Generated SigMF Filepath Names:")
             print(fn_dp1_meta, fn_dp2_meta)
             print(fn_dp1_data, fn_dp2_data)

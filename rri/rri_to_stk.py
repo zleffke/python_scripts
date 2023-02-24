@@ -24,9 +24,11 @@ import numpy as np
 import json
 import yaml
 import h5py
+import pandas as pd
 warnings.filterwarnings("ignore")
 
 import hdf5_utils as utils
+import stk_utils as stk
 
 
 def import_configs_yaml(args):
@@ -82,60 +84,32 @@ if __name__ == '__main__':
 
     conv = utils.HDF5_SigMF_Converter(cfg)
     metadata = conv.get_metadata()
-    #print(json.dumps(metadata, indent=4))
 
-    # conv._gen_sigmf_filename(verbose=True)
-    # conv._gen_sigmf_meta(verbose=True)
-    conv.get_radio_iq()
-    conv.get_radio_meta()
+    df = pd.DataFrame()
+    df['Ephemeris UTC [sec]']        = pd.DataFrame(metadata['CASSIOPE Ephemeris']['Ephemeris UTC [sec]'])
+    # ScenarioEpoch = df['Ephemeris UTC [sec]'][0]
+    # df['timestamp'] = df['Ephemeris UTC [sec]'] - ScenarioEpoch
+    df['Geographic Latitude (deg)']  = metadata['CASSIOPE Ephemeris']['Geographic Latitude (deg)']
+    df['Geographic Longitude (deg)'] = metadata['CASSIOPE Ephemeris']['Geographic Longitude (deg)']
+    df['Altitude (km)']              = metadata['CASSIOPE Ephemeris']['Altitude (km)']
+    df['Roll (deg)']                 = metadata['CASSIOPE Ephemeris']['Roll (deg)']
+    df['Pitch (deg)']                = metadata['CASSIOPE Ephemeris']['Pitch (deg)']
+    df['Yaw (deg)']                  = metadata['CASSIOPE Ephemeris']['Yaw (deg)']
+    df.name = "_".join(cfg['main']['rri_file'].split("_")[0:4])
+    print(df)
+    print(metadata['CASSIOPE Ephemeris'].keys())
+    # print(json.dumps(metadata.keys(), indent=4))
+
+    # fn_base = "_".join(cfg['main']['rri_file'].split("_")[0:4])
+    # fn_att = ".".join([fn_base, "a"])
+    # fn_eph = ".".join([fn_base, "e"])
+    # print(fn_base)
+    # fp = cfg['main']['rri_path']
+    # fp_att = "/".join([fp,fn_att])
+    # fp_eph = "/".join([fp,fn_eph])
+
+    if cfg['stk']['export']:
+        stk.export_STK_ephemeris(df, cfg['main']['rri_path'])
+        stk.export_STK_attitude(df, cfg['main']['rri_path'])
 
     sys.exit()
-
-    conv._radio_meta(cfg)
-
-    #
-
-    sys.exit()
-
-
-    #
-
-    # print(metadata['CASSIOPE Ephemeris'].keys())
-    # for key in metadata['CASSIOPE Ephemeris'].keys():
-    #     obj = metadata['CASSIOPE Ephemeris'][key]
-    #     print(key, len(obj), type(obj))
-    #     if key == "GEI Position (km)":
-    #         print(len(obj[0]), type(obj[0]))
-    #         print(obj[1], type(obj[0]))
-    #
-    # df_eph = pd.DataFrame.from_dict(metadata['CASSIOPE Ephemeris'])
-    # df_rri = pd.DataFrame.from_dict(metadata['RRI Settings'])
-    # print(df_eph)
-    # sys.exit()
-
-    # meta = dict()
-    # for item_name, obj in rri.items():
-    #     print(item_name)
-    #     print(obj)
-    #     if isinstance(obj, h5py.Group):
-    #         temp = clean_attributes(get_attributes(obj))
-    #         sub_attrs = get_attrs_from_groups(obj)
-    #         temp.update(sub_attrs)
-    #         metadata_tree[item_name] = temp
-    #
-    # sys.exit()
-    #
-    #
-    #
-    #
-    #
-    #
-    # for k in rri.keys():
-    #     print(k)
-    #     print(rri[k].keys())
-    #
-    # print(np.array(rri['RRI Data']['RRI Packet Numbers']))
-    #
-    # print(np.array(rri['RRI Data']['Radio Data Monopole 1 (mV)']))
-    #
-    # sys.exit()

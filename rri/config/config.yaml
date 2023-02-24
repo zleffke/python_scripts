@@ -2,25 +2,36 @@ main:
   name: "rri_to_sigmf"
   version: "0.0.1"
   base_path: 'cwd'
-  rri_path: '/home/zleffke/captures/rri/rothr'
-  rri_file: 'RRI_20150410_235607_235959_lv1_12.0.0.h5'
+  rri_path: '/home/zleffke/captures/rri/wwv/20190519_045014'
+  rri_file: 'RRI_20190519_045014_050111_lv1_12.0.0.h5'
+  verbose: True
+  mono_to_di: True #If the data is monopole data, convert to equivalent Dipole
+  export:
+    iq: True
+    meta: True
+stk:
+  verbose: True
+  export: True
+snr:
+  file_a: "CHAN-A_SNR.f32"
+  file_b: "CHAN-B_SNR.f32"
+  samp_rate: 1000.0
 sigmf: #Sigmf Keys
   global: #global key
-    core: #core key
-      samp_rate: 62500.33933 #[hz]
-      hw: "ePOP,CASSIOPE,RRI"
-      license: "MIT"
-      author: "Zach Leffke, KJ4QLP"
-      description: "Radio Research Instrument IQ, https://epop.phys.ucalgary.ca/data/"
-      version: "0.0.2"
-      datatype: "cf32_le"
-      extensions:
-        - name: "rri"
-          version: "1.0.0"
-          optional: True
+    core:samp_rate: 62500.33933 #[hz]
+    core:hw: "ePOP,CASSIOPE,RRI"
+    core:license: "MIT"
+    core:author: "Zach Leffke, KJ4QLP"
+    core:description: "Radio Research Instrument IQ, https://epop.phys.ucalgary.ca/data/"
+    core:version: "0.0.2"
+    core:datatype: "cf32_le"
+    core:extensions:
+      - name: "rri"
+        version: "1.0.0"
+        optional: True
+    rri:experiment: "WWV"
   captures:
-    core:
-      sample_start: 0
-      frequency: 0.0
-      datetime: ""
+    core:sample_start: 0
+    core:frequency: 0.0
+    core:datetime: ""
   annotations: ""
