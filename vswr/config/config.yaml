@@ -1,8 +1,7 @@
-main:
-  name: "tuner_sim"
-  version: "0.0.1"
-  base_path: 'cwd'
-  verbose: True
-  export:
-    csv: True #Export CSV Data
-    plot: True #Export Figure
+name: "tuner_sim"
+version: "0.0.1"
+base_path: 'cwd'
+verbose: True
+tuner_type: "tee"
+export_csv: True #Export CSV Data
+save_plot: True #Export Figure
