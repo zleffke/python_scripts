@@ -82,14 +82,17 @@ if __name__ == '__main__':
     Z_src = complex(real=50, imag=0)
 
     #Antenna Complex Impedance, halfwave dipole at resonance
-    Z_ant = complex(real=73, imag=42)
+    # Z_ant = complex(real=73, imag=42)
+
+    #Antenna Complex Impedance, Folded Dipole
+    Z_ant = complex(real=250, imag=50)
 
     #Power out of radio [Watts]
     P_tx = 1.0
 
-    C1 = np.arange(1e-12,50e-12,1e-12)
-    C2 = np.arange(1e-12,50e-12,1e-12)
-    L  = np.arange(1e-9, 50.1e-9,1e-9)
+    C1 = np.arange(1e-12,30e-12,1e-12)
+    C2 = np.arange(1e-12,30e-12,1e-12)
+    L  = np.arange(1e-9, 30.1e-9,1e-9)
     
     f_C = np.vectorize(rt.capacitor_impedance, excluded="f")
     f_L = np.vectorize(rt.inductor_impedance, excluded="f")

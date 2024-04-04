@@ -72,7 +72,7 @@ def plot_vswr_heatmap(df, o_path = False, idx=0, save=0):
     # print(Z)
     # print(np.shape(df['vswr'].to_numpy()))
     # normalize = mpl.colors.Normalize(vmin=-1, vmax=1)
-    pcm = ax1.pcolormesh(X, Y, Z, cmap='plasma', 
+    pcm = ax1.pcolormesh(X, Y, Z, cmap='binary', 
                          norm=mpl.colors.PowerNorm(.2, vmax=10))
     
     cb = fig1.colorbar(pcm, label="VSWR")
